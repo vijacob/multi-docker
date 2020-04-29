@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t vijacob/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run vijacob/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t vijacob/multi-client ./client
+  - docker build -t vijacob/multi-nginx ./nginx
+  - docker build -t vijacob/multi-server ./server
+  - docker build -t vijacob/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push vijacob/multi-client
+  - docker push vijacob/multi-nginx
+  - docker push vijacob/multi-server
+  - docker push vijacob/multi-worker
+
